@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Text-Tractor</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 20px;
+      }
+      h1 {
+        text-align: center;
+        color: #333;
+      }
+      form {
+        background: #fff;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        max-width: 600px;
+        margin: 0 auto;
+        text-align: center;
+      }
+      input[type="file"] {
+        display: none;
+      }
+      input[type="submit"] {
+        background-color: #007BFF;
+        color: #fff;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 10px;
+      }
+      input[type="submit"]:hover {
+        background-color: #0056b3;
+      }
+      .drop-zone {
+        border: 2px dashed #007BFF;
+        padding: 20px;
+        border-radius: 8px;
+        cursor: pointer;
+        text-align: center;
+        transition: background-color 0.3s;
+      }
+      .drop-zone.dragover {
+        background-color: #e0e7ff;
+      }
+      .file-list {
+        margin-top: 10px;
+        text-align: left;
+      }
+      .file-item {
+        margin: 5px 0;
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background-color: #f9f9f9;
+      }
+    </style>
+</head>
+<body>
+    <h1>Text-Tractor</h1>
+    <p style="text-align: center; margin-bottom: 20px;">You can upload multiple PDFs to convert them into CSV</p>
+    <form id="uploadForm" method="post" enctype="multipart/form-data" action="/upload">
+      <div class="drop-zone" id="drop-zone">
+        Drag & drop your PDFs here or click to upload
+        <div id="fileList" class="file-list"></div>
+      </div>
+      <input type="file" name="files[]" id="fileInput" multiple accept=".pdf">
+      <input type="submit" value="Upload">
+    </form>
+
+    <script>
+      const dropZone = document.getElementById('drop-zone');
+      const fileInput = document.getElementById('fileInput');
+      const fileList = document.getElementById('fileList');
+
+      dropZone.addEventListener('click', () => fileInput.click());
+      dropZone.addEventListener('dragover', (event) => {
+        event.preventDefault();
+        dropZone.classList.add('dragover');
+      });
+      dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+      dropZone.addEventListener('drop', (event) => {
+        event.preventDefault();
+        dropZone.classList.remove('dragover');
+        const files = event.dataTransfer.files;
+        fileInput.files = files;
+        displayFiles(files);
+      });
+      fileInput.addEventListener('change', (event) => {
+        const files = event.target.files;
+        displayFiles(files);
+      });
+      function displayFiles(files) {
+        fileList.innerHTML = '';
+        for (let i = 0; i < files.length; i++) {
+          const fileItem = document.createElement('div');
+          fileItem.className = 'file-item';
+          fileItem.textContent = files[i].name;
+          fileList.appendChild(fileItem);
+        }
+      }
+    </script>
+</body>
+</html>
