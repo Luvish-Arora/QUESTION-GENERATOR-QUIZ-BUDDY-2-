@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, jsonify
 import os
 import pandas as pd
 from werkzeug.utils import secure_filename
-from QuizGenerator import QuizGenerator, save_to_excel  # Import your quiz generation class and methods
+from QuizGenerator import QuizGenerator  # Import your quiz generation class and methods
 import logging
 import random
 
@@ -19,12 +19,12 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Global variables to store questions and used question IDs
+questions = []
+
 # Function to check if the file is allowed
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
-# Global variable to store the generated questions
-questions = []
 
 # Function to load questions from Excel
 def load_questions():
@@ -38,6 +38,8 @@ def load_questions():
 # Function to save questions to Excel
 def save_to_excel(questions):
     df = pd.DataFrame(questions)
+    if 'used' not in df.columns:
+        df['used'] = False  # Ensure 'used' column exists
     df.to_excel('generated_questions.xlsx', index=False)
 
 @app.route('/')
@@ -63,12 +65,29 @@ def upload_file():
             quiz_gen = QuizGenerator()
             
             # Process the uploaded PDF and generate questions
-            questions = quiz_gen.process_pdf(filepath)
+            raw_questions = quiz_gen.process_pdf(filepath)
             
-            # Save the generated questions to an Excel file
-            if questions:
-                save_to_excel(questions)
-                logger.info(f"Questions saved to 'generated_questions.xlsx'")
+            # Prepare questions with separated options
+            processed_questions = []
+            for question in raw_questions:
+                options = question.get('options', [])
+                if isinstance(options, str):
+                    options = options.split(';')  # Change delimiter if needed
+
+                processed_questions.append({
+                    'id': len(processed_questions) + 1,
+                    'question': question.get('question', ''),
+                    'context': question.get('context', ''),
+                    'option1': options[0] if len(options) > 0 else '',
+                    'option2': options[1] if len(options) > 1 else '',
+                    'correct_answer': question.get('correct_answer', ''),
+                    'used': False
+                })
+            
+            # Save the processed questions to the Excel file
+            if processed_questions:
+                save_to_excel(processed_questions)
+                logger.info("Questions saved to 'generated_questions.xlsx'")
             else:
                 logger.warning("No questions were generated!")
 
@@ -84,23 +103,36 @@ def quiz():
     if not questions:
         return render_template('quiz_complete.html')  # Render a page when all questions are used
 
-    # Randomly pick a question that hasn't been used yet
-    question = random.choice(questions)
-    questions.remove(question)  # Remove the used question from the pool
-    save_to_excel(questions)  # Save the remaining questions
+    # Filter unused questions
+    unused_questions = [q for q in questions if not q['used']]
+
+    if not unused_questions:
+        return render_template('quiz_complete.html')  # Render a page when all questions are used
+
+    # Randomly pick an unused question
+    question = random.choice(unused_questions)
+    question['used'] = True  # Mark question as used
+    save_to_excel(questions)  # Save updated questions to Excel
 
     return render_template('quiz.html', question=question)
 
 @app.route('/get-random-question')
 def get_random_question():
     """API endpoint to get a random question."""
-    if questions:
-        question = random.choice(questions)
-        questions.remove(question)  # Remove the used question
-        save_to_excel(questions)  # Save the remaining questions
-        return jsonify(question=question['question'], option1=question['option1'], option2=question['option2'])
+    unused_questions = [q for q in questions if not q['used']]
+
+    if unused_questions:
+        question = random.choice(unused_questions)
+        question['used'] = True  # Mark question as used
+        save_to_excel(questions)  # Save updated questions to Excel
+        return jsonify(
+            question=question['question'],
+            context=question.get('context', ''),
+            option1=question['option1'],
+            option2=question['option2']
+        )
     else:
-        return jsonify(message="Quiz complete")
+        return jsonify(message="All questions have been used!")
 
 if __name__ == '__main__':
     # Create the upload folder if it doesn't exist
@@ -109,5 +141,4 @@ if __name__ == '__main__':
 
     # Load questions at the start
     load_questions()
-    print("hi")
     app.run(debug=True)
