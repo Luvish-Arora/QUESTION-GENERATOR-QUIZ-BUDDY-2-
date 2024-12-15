@@ -109,5 +109,5 @@ if __name__ == '__main__':
 
     # Load questions at the start
     load_questions()
-
+    print("hi")
     app.run(debug=True)
