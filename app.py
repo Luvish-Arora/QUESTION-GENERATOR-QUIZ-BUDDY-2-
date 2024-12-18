@@ -7,7 +7,8 @@ import logging
 import random
 
 # Initialize the Flask application
-app = Flask(__name__)
+app = Flask(__name__, template_folder='./templates')
+
 
 # Configure upload folder and allowed extensions
 UPLOAD_FOLDER = 'uploads'
@@ -101,13 +102,13 @@ def upload_file():
 def quiz():
     """Render the quiz page with a random question."""
     if not questions:
-        return render_template('quiz_complete.html')  # Render a page when all questions are used
+        return render_template('quiz_complete.html')  # Render this if all questions are used
 
     # Filter unused questions
     unused_questions = [q for q in questions if not q['used']]
 
     if not unused_questions:
-        return render_template('quiz_complete.html')  # Render a page when all questions are used
+        return render_template('quiz_complete.html')  # Render this if no unused questions exist
 
     # Randomly pick an unused question
     question = random.choice(unused_questions)

@@ -13,12 +13,8 @@
             <img src="../static/images/logo2.avif" alt="Quiz Logo" class="logo">
             <div style="color: black; font-size: xx-large; margin-left: 150px;">Leap , Learn & Lead!!!</div>
             <div class="search-and-login">
-                <a href="#">
-                    <i class="fas fa-search"></i>
-                </a>
-                <a href="/login.html">
-                    <button type="button">Log-in</button>
-                </a>
+                <a href="#"><i class="fas fa-search"></i></a>
+                <a href="/login.html"><button type="button">Log-in</button></a>
                 <a href="https://quizbuddy.streamlit.app/" target="_blank" title="Chatbot">
                     <i class="fas fa-comments"></i>
                 </a>
@@ -40,14 +36,16 @@
         </section>
 
         <section class="pdf-upload-section" style="margin-top: -100px;">
-          <h1>Create Your Own Quiz</h1>
+            <h1>Create Your Own Quiz</h1>
             <h1>Upload PDF for Quiz Generation</h1>
             <form id="uploadForm" method="post" enctype="multipart/form-data" action="/upload">
                 <div class="drop-zone" id="drop-zone">
                     <p>Drag & Drop PDFs Here or Click to Select from Device</p>
+                    <!-- Hidden file input -->
+                    <input type="file" name="files[]" id="fileInput" multiple accept=".pdf" style="display: none;">
                     <div id="fileList" class="file-list"></div>
                 </div>
-                <button type="submit" class="upload-btn" style="width: 150px; height: 60px; background-color:#003d82">Upload PDF</button>
+                <button type="submit" class="upload-btn" style="width: 150px; height: 60px; background-color:#003d82; color: white;">Upload PDF</button>
             </form>
         </section>
     </main>
@@ -56,12 +54,8 @@
         <div class="footer-content">
             <a href="mailto:support@example.com" class="contact-us">Contact Us</a>
             <div class="social-icons">
-                <a href="https://www.instagram.com" target="_blank">
-                    <i class="fab fa-instagram"></i>
-                </a>
-                <a href="mailto:support@example.com">
-                    <i class="fas fa-envelope"></i>
-                </a>
+                <a href="https://www.instagram.com" target="_blank"><i class="fab fa-instagram"></i></a>
+                <a href="mailto:support@example.com"><i class="fas fa-envelope"></i></a>
             </div>
         </div>
     </footer>
@@ -72,8 +66,10 @@
         const fileList = document.getElementById('fileList');
         const uploadForm = document.getElementById('uploadForm');
 
+        // Trigger file input when clicking on drop-zone
         dropZone.addEventListener('click', () => fileInput.click());
 
+        // Highlight drop zone when dragging files over it
         dropZone.addEventListener('dragover', (event) => {
             event.preventDefault();
             dropZone.classList.add('dragover');
@@ -81,6 +77,7 @@
 
         dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
 
+        // Handle dropped files
         dropZone.addEventListener('drop', (event) => {
             event.preventDefault();
             dropZone.classList.remove('dragover');
@@ -89,11 +86,13 @@
             displayFiles(files);
         });
 
+        // Handle files selected via file input
         fileInput.addEventListener('change', (event) => {
             const files = event.target.files;
             displayFiles(files);
         });
 
+        // Display file names
         function displayFiles(files) {
             fileList.innerHTML = '';
             for (let i = 0; i < files.length; i++) {
@@ -104,6 +103,7 @@
             }
         }
 
+        // Handle form submission
         uploadForm.addEventListener('submit', function(event) {
             event.preventDefault();
             const formData = new FormData(this);
@@ -114,8 +114,7 @@
             })
             .then(response => {
                 if (response.ok) {
-                    // Redirect to quiz page or show success message
-                    window.location.href = '/quiz.html';
+                    window.location.href = '/quiz'; // Redirect to quiz page
                 } else {
                     alert('Failed to upload PDF. Please try again.');
                 }
